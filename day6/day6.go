@@ -30,16 +30,16 @@ func load() {
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
-	var total int
+	var totalPart1 int
+	var totalPart2 int
 	for _, s := range p {
-		// log.Print(s.count())
-		total += s.count()
+		totalPart1 += s.countPart1()
+		totalPart2 += s.countPart2()
 	}
-	log.Print(total)
+	log.Print(totalPart1)
+	log.Print(totalPart2)
 }
 
 func main() {
 	load()
-	// s := "0123456"
-	// log.Print(s[len(s)-2:])
 }
