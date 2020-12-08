@@ -60,6 +60,9 @@ func load() {
 		runLog := make(map[int]bool)
 		acc = 0
 		broke := false
+		if program[j].ins == "acc" {
+			continue
+		}
 		for i := 0; i < len(program); {
 			if runLog[i] {
 				broke = true
