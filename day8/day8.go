@@ -56,26 +56,19 @@ func load() {
 	log.Print("Part 1")
 	log.Print(acc)
 
-	// broke := false
-	// var count int64
-
 	max := int64(10000)
 
 	for j := 0; j < len(program); j++ {
-		// runLog := make(map[int]bool)
-		// log.Print(j)
+		runLog := make(map[int]bool)
 		var count int64
 		acc = 0
+		broke := false
 		for i := 0; i < len(program) && count < max; {
-			count++
-			// log.Print("I: ", i)
-			// log.Print("J: ", j)
-			// log.Print("count: ", count)
-			// if runLog[i] {
-			// 	broke = true
-			// 	break
-			// }
-			// runLog[i] = true
+			if runLog[i] {
+				broke = true
+				break
+			}
+			runLog[i] = true
 			ins := program[i].ins
 			if i == j {
 				if ins == "nop" {
@@ -95,11 +88,9 @@ func load() {
 				i += int(program[i].offset)
 			}
 		}
-		if count < max {
+		if !broke {
 			log.Print(acc)
 		}
-		// if !broke {
-		// }
 	}
 
 	if err := scanner.Err(); err != nil {
