@@ -56,14 +56,11 @@ func load() {
 	log.Print("Part 1")
 	log.Print(acc)
 
-	max := int64(10000)
-
 	for j := 0; j < len(program); j++ {
 		runLog := make(map[int]bool)
-		var count int64
 		acc = 0
 		broke := false
-		for i := 0; i < len(program) && count < max; {
+		for i := 0; i < len(program); {
 			if runLog[i] {
 				broke = true
 				break
@@ -79,7 +76,6 @@ func load() {
 			}
 			switch ins {
 			case "nop":
-				// log.Print("NOP")
 				i++
 			case "acc":
 				acc += program[i].offset
