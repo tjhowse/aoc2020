@@ -19,7 +19,6 @@ func sumSlice(slice []int64, start int64, end int64) int64 {
 func minInSlice(slice []int64) int64 {
 	var min int64
 	min = int64(math.Pow(2, 32))
-	log.Print(min)
 	for _, i := range slice {
 		if i < min {
 			min = i
@@ -76,7 +75,6 @@ func load() {
 		}
 		if !found {
 			partA = xmas[i]
-			log.Print(i)
 			log.Print(xmas[i])
 			break
 		}
