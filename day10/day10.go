@@ -10,7 +10,7 @@ import (
 )
 
 type seq struct {
-	a []int
+	a []uint8
 }
 
 func fileToSlice(filename string) []string {
@@ -32,9 +32,9 @@ func fileToSlice(filename string) []string {
 
 // func getCombo(array []int)
 
-func getLinkableIndices(index int, array []int) []int {
-	linkables := []int{}
-	for i := index; i < len(array); i++ {
+func getLinkableIndices(index uint8, array []uint8) []uint8 {
+	linkables := []uint8{}
+	for i := index; i < uint8(len(array)); i++ {
 		jolt := array[i]
 		if jolt <= array[index] {
 			continue
@@ -47,14 +47,16 @@ func getLinkableIndices(index int, array []int) []int {
 	return linkables
 }
 
-func do(result map[[100]int]struct{}, input []int, part seq, index int) {
+func do(result map[[100]uint8]struct{}, input []uint8, part seq, index uint8) {
+	asfd := make(map[string]int)
+
 	part.a = append(part.a, input[index])
 	next := getLinkableIndices(index, input)
 	if len(next) == 0 {
-		var k [100]int
+		var k [100]uint8
 		copy(k[:], part.a[:])
 		result[k] = struct{}{}
-		if len(result) > 1000000 {
+		if len(result) > 10000000 {
 			f, _ := os.Create("dump")
 			defer f.Close()
 			pprof.WriteHeapProfile(f)
@@ -72,16 +74,17 @@ func do(result map[[100]int]struct{}, input []int, part seq, index int) {
 
 func load() {
 	fileContents := fileToSlice("input")
-	jolts := []int{0}
+	jolts := []uint8{0}
 	for _, line := range fileContents {
-		i, err := strconv.ParseInt(line, 10, 64)
+		i, err := strconv.ParseUint(line, 10, 8)
 		if err != nil {
-			log.Fatal("Couldn't parse jolts")
+			log.Fatal("Couldn't parse jolts", err)
 		}
-		jolts = append(jolts, int(i))
+		jolts = append(jolts, uint8(i))
 	}
-	dist := make(map[int]int)
-	sort.Ints(jolts)
+	dist := make(map[uint8]int)
+	sort.Slice(jolts, func(i, j int) bool { return jolts[i] < jolts[j] })
+	// sort.Ints(jolts)
 	for i := 0; i < len(jolts)-1; i++ {
 		// log.Print(i)
 		diff := jolts[i+1] - jolts[i]
@@ -96,7 +99,7 @@ func load() {
 	dist[3]++
 	log.Print(dist[1] * dist[3])
 
-	m := make(map[[100]int]struct{})
+	m := make(map[[100]uint8]struct{})
 	var s seq
 	s.a = append(s.a, 0)
 	do(m, jolts, s, 0)
