@@ -47,15 +47,17 @@ func getLinkableIndices(index uint8, array []uint8) []uint8 {
 	return linkables
 }
 
-func do(result map[[100]uint8]struct{}, input []uint8, part seq, index uint8) {
-	asfd := make(map[string]int)
-
+func do(result map[[100]uint8]struct{}, input []uint8, part seq, index uint8) int {
+	var total int
+	// m := make(map[[100]uint8]struct{})
 	part.a = append(part.a, input[index])
 	next := getLinkableIndices(index, input)
 	if len(next) == 0 {
 		var k [100]uint8
 		copy(k[:], part.a[:])
 		result[k] = struct{}{}
+		// m[k] = struct{}{}
+
 		if len(result) > 10000000 {
 			f, _ := os.Create("dump")
 			defer f.Close()
@@ -63,13 +65,17 @@ func do(result map[[100]uint8]struct{}, input []uint8, part seq, index uint8) {
 			log.Fatal("too big, ", len(result))
 		}
 
-		return
+		return len(result)
 	}
 	for _, i := range next {
 		// log.Print(part)
 		split := part
-		do(result, input, split, i)
+		result := make(map[[100]uint8]struct{})
+		total += do(result, input, split, i)
+		log.Print(len(result))
+
 	}
+	return total
 }
 
 func load() {
@@ -102,8 +108,8 @@ func load() {
 	m := make(map[[100]uint8]struct{})
 	var s seq
 	s.a = append(s.a, 0)
-	do(m, jolts, s, 0)
-	log.Print(len(m))
+	log.Print(do(m, jolts, s, 0))
+	// log.Print(len(m))
 	// for _, i := range jolts {
 	// 	log.Print(i)
 	// }
