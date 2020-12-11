@@ -70,9 +70,7 @@ func do(result map[[100]uint8]struct{}, input []uint8, part seq, index uint8) in
 	for _, i := range next {
 		// log.Print(part)
 		split := part
-		result := make(map[[100]uint8]struct{})
 		total += do(result, input, split, i)
-		log.Print(len(result))
 
 	}
 	return total
@@ -108,8 +106,8 @@ func load() {
 	m := make(map[[100]uint8]struct{})
 	var s seq
 	s.a = append(s.a, 0)
-	log.Print(do(m, jolts, s, 0))
-	// log.Print(len(m))
+	do(m, jolts, s, 0)
+	log.Print(len(m))
 	// for _, i := range jolts {
 	// 	log.Print(i)
 	// }
