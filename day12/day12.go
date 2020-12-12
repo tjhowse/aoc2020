@@ -47,41 +47,56 @@ type pa struct {
 }
 
 type ship struct {
-	x, y int
-	h    heading
+	x, y   int
+	wX, wY int
+	h      heading
+}
+
+func rotate(deg int, v vec) vec {
+	var result vec
+	m := math.Sqrt(math.Pow(float64(v.x), 2) + math.Pow(float64(v.y), 2))
+	angle := math.Atan2(float64(v.y), float64(v.x))
+	result.x = int(math.Round(m * math.Cos(angle+float64(deg)*(math.Pi/180))))
+	result.y = int(math.Round(m * math.Sin(angle+float64(deg)*(math.Pi/180))))
+	return result
 }
 
 func (s *ship) doInstruction(i pa) {
 	switch i.d {
 	case byte('R'):
-		s.h.turn(i.d, i.n)
+		// s.h.turn(i.d, i.n)
+		var v vec
+		v.x = s.wX
+		v.y = s.wY
+		n := rotate(-i.n, v)
+		s.wX = n.x
+		s.wY = n.y
 	case byte('L'):
-		s.h.turn(i.d, i.n)
+		// s.h.turn(i.d, i.n)
+		var v vec
+		v.x = s.wX
+		v.y = s.wY
+		n := rotate(i.n, v)
+		s.wX = n.x
+		s.wY = n.y
 	case byte('N'):
-		s.y += i.n
+		s.wY += i.n
 	case byte('S'):
-		s.y -= i.n
+		s.wY -= i.n
 	case byte('E'):
-		s.x += i.n
+		s.wX += i.n
 	case byte('W'):
-		s.x -= i.n
+		s.wX -= i.n
 	case byte('F'):
-		switch s.h.h {
-		case east:
-			s.x += i.n
-		case south:
-			s.y -= i.n
-		case west:
-			s.x -= i.n
-		case north:
-			s.y += i.n
-		default:
-			log.Fatal("Bad direction: ", s.h.h)
+		for j := 0; j < i.n; j++ {
+			s.x += s.wX
+			s.y += s.wY
 		}
 	default:
 		log.Fatal("Bad command: ", i.d)
 	}
-	// log.Print(s.x, ", ", s.y, ", ", s.h.h)
+	// log.Print("Pos: ", s.x, ", ", s.y)
+	// log.Print(" wp: ", s.wX, ", ", s.wY)
 }
 
 func fileToSlice(filename string) []string {
@@ -118,6 +133,8 @@ func load() {
 	}
 	// log.Print(commands)
 	var s ship
+	s.wX = 10
+	s.wY = 1
 	for _, c := range commands {
 		s.doInstruction(c)
 	}
@@ -126,4 +143,9 @@ func load() {
 }
 func main() {
 	load()
+	// var v vec
+	// v.x = 10
+	// v.y = 0
+	// log.Print(v)
+	// log.Print(rotate(90, v))
 }
