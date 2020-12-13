@@ -64,7 +64,58 @@ func load() {
 	log.Print(minID)
 	log.Print(minID * a)
 
+	busIDs = []int64{}
+	for _, i := range busIDStrings {
+		if i != "x" {
+			j, err := strconv.ParseInt(i, 10, 64)
+			if err != nil {
+				log.Fatal("Couldn't parse id")
+			}
+			busIDs = append(busIDs, j)
+		} else {
+			busIDs = append(busIDs, 1)
+		}
+	}
+
+}
+
+func load2() {
+	fileContents := fileToSlice("input")
+
+	busIDStrings := strings.Split(fileContents[1], ",")
+	busIDs := []int64{}
+
+	for _, i := range busIDStrings {
+		if i != "x" {
+			j, err := strconv.ParseInt(i, 10, 64)
+			if err != nil {
+				log.Fatal("Couldn't parse id")
+			}
+			busIDs = append(busIDs, j)
+		} else {
+			busIDs = append(busIDs, 1)
+		}
+	}
+	log.Print(busIDs)
+	for j := int64(1); j < math.MaxInt64; j++ {
+		// log.Print("j: ", j)
+		for i, b := range busIDs {
+			// log.Print("i: ", i)
+			// log.Print("b: ", b)
+			// log.Print("m: ", (j+int64(i))%b)
+			// log.Print("---------")
+			if (j+int64(i))%b != 0 {
+				break
+			}
+			if i == (len(busIDs) - 1) {
+				log.Fatal(j)
+				break
+			}
+		}
+	}
+
 }
 func main() {
-	load()
+	// load()
+	load2()
 }
