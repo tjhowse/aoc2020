@@ -33,9 +33,9 @@ func load() {
 	if err != nil {
 		log.Fatal("Cannot parse thing")
 	}
-	busIdStrings := strings.Split(fileContents[1], ",")
+	busIDStrings := strings.Split(fileContents[1], ",")
 	busIDs := []int64{}
-	for _, i := range busIdStrings {
+	for _, i := range busIDStrings {
 		if i != "x" {
 			j, err := strconv.ParseInt(i, 10, 64)
 			if err != nil {
