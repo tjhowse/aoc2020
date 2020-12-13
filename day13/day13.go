@@ -80,6 +80,7 @@ func load() {
 }
 
 func load2() {
+	// This approach works, but takes literally forever.
 	fileContents := fileToSlice("input")
 
 	busIDStrings := strings.Split(fileContents[1], ",")
@@ -98,24 +99,44 @@ func load2() {
 	}
 	log.Print(busIDs)
 	for j := int64(1); j < math.MaxInt64; j++ {
-		// log.Print("j: ", j)
 		for i, b := range busIDs {
-			// log.Print("i: ", i)
-			// log.Print("b: ", b)
-			// log.Print("m: ", (j+int64(i))%b)
-			// log.Print("---------")
 			if (j+int64(i))%b != 0 {
 				break
 			}
 			if i == (len(busIDs) - 1) {
-				log.Fatal(j)
-				break
+				log.Print(j)
+				return
 			}
 		}
 	}
+}
 
+func load3() {
+	// This approach works, but takes literally forever.
+	fileContents := fileToSlice("input")
+
+	busIDStrings := strings.Split(fileContents[1], ",")
+	busIDs := []int64{}
+
+	for _, i := range busIDStrings {
+		if i != "x" {
+			j, err := strconv.ParseInt(i, 10, 64)
+			if err != nil {
+				log.Fatal("Couldn't parse id")
+			}
+			busIDs = append(busIDs, j)
+		} else {
+			busIDs = append(busIDs, 1)
+		}
+	}
+	log.Print(busIDs)
+	var total int64 = 1
+	for _, i := range busIDs {
+		total *= i
+	}
+	log.Print(total)
 }
 func main() {
-	// load()
 	load2()
+	load3()
 }
