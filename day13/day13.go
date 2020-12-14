@@ -98,7 +98,7 @@ func load2() {
 		}
 	}
 	log.Print(busIDs)
-	for j := int64(1); j < math.MaxInt64; j++ {
+	for j := busIDs[0]; j < math.MaxInt64; j += busIDs[0] {
 		for i, b := range busIDs {
 			if (j+int64(i))%b != 0 {
 				break
@@ -109,6 +109,21 @@ func load2() {
 			}
 		}
 	}
+}
+func woo(start, inc, max int64, busIDs []int64) int64 {
+	for j := int64(start); j < math.MaxInt64; j += inc {
+		for i, b := range busIDs[:int64(max)] {
+			if (j+int64(i))%b != 0 {
+				break
+			}
+			// if i == (len(busIDs) - 1) {
+			if int64(i) == max-1 {
+				log.Print(j)
+				return j
+			}
+		}
+	}
+	return 0
 }
 
 func load3() {
@@ -130,12 +145,29 @@ func load3() {
 		}
 	}
 	log.Print(busIDs)
-	var total int64 = 1
-	for _, i := range busIDs {
-		total *= i
+	for k := 2; k <= len(busIDs); k++ {
+		log.Print("loopan: ", k)
+		var inc int64 = 1
+		for _, b := range busIDs[:k-1] {
+			inc *= b
+		}
+		log.Print("inc: ", inc)
+	out:
+		for j := busIDs[0]; j < math.MaxInt64; j += inc {
+			for i, b := range busIDs[:k] {
+				if (j+int64(i))%b != 0 {
+					break
+				}
+				// if i == (len(busIDs) - 1) {
+				if i == k-1 {
+					log.Print(j)
+					break out
+				}
+			}
+		}
 	}
-	log.Print(total)
 }
+
 func main() {
 	load2()
 	load3()
