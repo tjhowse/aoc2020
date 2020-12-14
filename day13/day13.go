@@ -118,7 +118,6 @@ func woo(start, inc, max int64, busIDs []int64) int64 {
 			}
 			// if i == (len(busIDs) - 1) {
 			if int64(i) == max-1 {
-				log.Print(j)
 				return j
 			}
 		}
@@ -126,8 +125,8 @@ func woo(start, inc, max int64, busIDs []int64) int64 {
 	return 0
 }
 
+// This solution thanks to cinphart. I reached many dead ends.
 func load3() {
-	// This approach works, but takes literally forever.
 	fileContents := fileToSlice("input")
 
 	busIDStrings := strings.Split(fileContents[1], ",")
@@ -144,31 +143,30 @@ func load3() {
 			busIDs = append(busIDs, 1)
 		}
 	}
-	log.Print(busIDs)
+	// Step through the list of IDs gradually. Do:
+	// 0 -> 1, get an answer, then
+	// 0 -> 2, get an answer... etc
+	var prevAnswer int64
 	for k := 2; k <= len(busIDs); k++ {
-		log.Print("loopan: ", k)
 		var inc int64 = 1
+		// Incrementing from the starting point using the
+		// product of all prior IDs. This is because
+		// a valid departure time is v + n*p, where v
+		// is the -first- valid departure time, and n is
+		// any integer and p is the product of all bus IDs
+		// for which that is a valid departure time.
+		// I don't fully understand why yet.
 		for _, b := range busIDs[:k-1] {
 			inc *= b
 		}
-		log.Print("inc: ", inc)
-	out:
-		for j := busIDs[0]; j < math.MaxInt64; j += inc {
-			for i, b := range busIDs[:k] {
-				if (j+int64(i))%b != 0 {
-					break
-				}
-				// if i == (len(busIDs) - 1) {
-				if i == k-1 {
-					log.Print(j)
-					break out
-				}
-			}
-		}
+		// The starting point for the search for the next valid answer
+		// for this 0 -> k range is the previous answer.
+		prevAnswer = woo(prevAnswer, inc, int64(k), busIDs)
 	}
+	log.Print("prevAnswer: ", prevAnswer)
 }
 
 func main() {
-	load2()
+	// load2()
 	load3()
 }
