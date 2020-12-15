@@ -6,12 +6,6 @@ import (
 	"os"
 )
 
-type a struct {
-	a int
-}
-
-const fieldLen = 36
-
 func fileToSlice(filename string) []string {
 	var contents []string
 	file, err := os.Open(filename)
