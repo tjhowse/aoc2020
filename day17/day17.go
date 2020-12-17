@@ -2,19 +2,20 @@ package main
 
 import (
 	"bufio"
-	"fmt"
 	"log"
 	"os"
 	"regexp"
 )
 
-const boop = 30
+const boop = 20
 const maxX = boop
 const maxY = boop
 const maxZ = boop
+const maxW = boop
 const minX = -boop
 const minY = -boop
 const minZ = -boop
+const minW = -boop
 
 // const maxX = 20
 // const maxY = 20
@@ -31,19 +32,25 @@ type vec3 struct {
 	x, y, z int64
 }
 
-type state struct {
-	s map[vec3]bool
+type vec4 struct {
+	x, y, z, w int64
 }
 
-func (s *state) countAdjacent(c vec3) (result int64) {
-	for k := c.z - 1; k <= c.z+1; k++ {
-		for j := c.y - 1; j <= c.y+1; j++ {
-			for i := c.x - 1; i <= c.x+1; i++ {
-				if i == c.x && j == c.y && k == c.z {
-					continue
-				}
-				if s.s[vec3{i, j, k}] {
-					result++
+type state struct {
+	s map[vec4]bool
+}
+
+func (s *state) countAdjacent(c vec4) (result int64) {
+	for l := c.w - 1; l <= c.w+1; l++ {
+		for k := c.z - 1; k <= c.z+1; k++ {
+			for j := c.y - 1; j <= c.y+1; j++ {
+				for i := c.x - 1; i <= c.x+1; i++ {
+					if i == c.x && j == c.y && k == c.z && l == c.w {
+						continue
+					}
+					if s.s[vec4{i, j, k, l}] {
+						result++
+					}
 				}
 			}
 		}
@@ -53,26 +60,28 @@ func (s *state) countAdjacent(c vec3) (result int64) {
 
 func (s *state) step() state {
 	result := state{}
-	result.s = make(map[vec3]bool)
+	result.s = make(map[vec4]bool)
 
-	for k := int64(minZ); k <= maxZ; k++ {
-		for j := int64(minY); j <= maxY; j++ {
-			for i := int64(minX); i <= maxX; i++ {
-				vec := vec3{i, j, k}
-				adj := s.countAdjacent(vec)
-				if s.s[vec] {
-					if !(adj == 2 || adj == 3) {
-						result.s[vec] = false
+	for l := int64(minW); l <= maxW; l++ {
+		for k := int64(minZ); k <= maxZ; k++ {
+			for j := int64(minY); j <= maxY; j++ {
+				for i := int64(minX); i <= maxX; i++ {
+					vec := vec4{i, j, k, l}
+					adj := s.countAdjacent(vec)
+					if s.s[vec] {
+						if !(adj == 2 || adj == 3) {
+							result.s[vec] = false
+						} else {
+							result.s[vec] = true
+
+						}
 					} else {
-						result.s[vec] = true
+						if adj == 3 {
+							result.s[vec] = true
+						} else {
+							result.s[vec] = false
 
-					}
-				} else {
-					if adj == 3 {
-						result.s[vec] = true
-					} else {
-						result.s[vec] = false
-
+						}
 					}
 				}
 			}
@@ -90,22 +99,22 @@ func (s *state) countActive() (result int64) {
 	return result
 }
 
-func (s *state) print() {
-	for k := int64(minZ); k <= maxZ; k++ {
-		fmt.Println("\n-------------", k)
-		for j := int64(minY); j <= maxY; j++ {
-			for i := int64(minX); i <= maxX; i++ {
-				vec := vec3{i, j, k}
-				if s.s[vec] {
-					fmt.Print("#")
-				} else {
-					fmt.Print(".")
-				}
-			}
-			fmt.Println()
-		}
-	}
-}
+// func (s *state) print() {
+// 	for k := int64(minZ); k <= maxZ; k++ {
+// 		fmt.Println("\n-------------", k)
+// 		for j := int64(minY); j <= maxY; j++ {
+// 			for i := int64(minX); i <= maxX; i++ {
+// 				vec := vec3{i, j, k}
+// 				if s.s[vec] {
+// 					fmt.Print("#")
+// 				} else {
+// 					fmt.Print(".")
+// 				}
+// 			}
+// 			fmt.Println()
+// 		}
+// 	}
+// }
 
 func reSubMatchMap(r *regexp.Regexp, str string) map[string]string {
 	match := r.FindStringSubmatch(str)
@@ -140,12 +149,12 @@ func load() {
 	// log.Print(-21 % 5)
 	fileContents := fileToSlice("input")
 	s := state{}
-	s.s = make(map[vec3]bool)
+	s.s = make(map[vec4]bool)
 	for y, line := range fileContents {
 		// strconv.ParseInt(xxx, 10, 64)
 		for x, cell := range line {
 			if cell == '#' {
-				vec := vec3{int64(x), int64(y), 0}
+				vec := vec4{int64(x), int64(y), 0, 0}
 				s.s[vec] = true
 			}
 		}
