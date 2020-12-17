@@ -7,7 +7,7 @@ import (
 	"regexp"
 )
 
-const boop = 20
+const boop = 15
 const maxX = boop
 const maxY = boop
 const maxZ = boop
