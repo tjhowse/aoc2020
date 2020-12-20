@@ -11,13 +11,13 @@ import (
 var reMaths = regexp.MustCompile(`(?P<a>\d+) (?P<o>[\+*]) (?P<b>\d+)`)
 var reAdd = regexp.MustCompile(`(?P<a>\d+) (?P<o>[\+]) (?P<b>\d+)`)
 var reMul = regexp.MustCompile(`(?P<a>\d+) (?P<o>[*]) (?P<b>\d+)`)
+var reMulAdd = regexp.MustCompile(`[\d\+* ]+`)
 var reSubExpr = regexp.MustCompile(`\((?P<exp>[\d +*]+)\)`)
 var reNoOp = regexp.MustCompile(`\((?P<exp>[\d ]+)\)`)
 
 // var reFooBar = regexp.MustCompile(`[\w+:]{1,}(?P<fooNum>\d+),[\w+\s:]{1,}(?P<barNum>\d+)`)
 func reSubMatchMap(r *regexp.Regexp, str string) map[string]string {
 	match := r.FindStringSubmatch(str)
-	log.Print(match)
 	subMatchMap := make(map[string]string)
 	if len(match) == 0 {
 		return subMatchMap
@@ -145,24 +145,54 @@ func evalPiecewise(expr *string, add bool) (result string, changed bool) {
 
 // }
 
-func evalRegexPlus(expr string) (result string) {
-	log.Print(expr)
+type operation func(int64, int64) int64
+
+func add(a, b int64) int64 {
+	return a + b
+}
+func mul(a, b int64) int64 {
+	return a * b
+}
+
+func evalRegexPlus(expr string) (result string, changed bool) {
+	orig := expr
+	result = evalRegex(expr, reAdd, add, "add")
+	if orig != result {
+		changed = true
+	}
+	return result, changed
+}
+
+func evalRegexMul(expr string) (result string, changed bool) {
+	orig := expr
+	// // Find any instances of mixtures of + and * at the same level and strip them
+	// loc := reMulAdd.FindStringIndex(expr)
+	result = evalRegex(expr, reMul, mul, "mul")
+	if orig != result {
+		changed = true
+	}
+	return result, changed
+}
+
+func evalRegex(expr string, reg *regexp.Regexp, op operation, t string) (result string) {
 	var changed bool = true
 	for changed {
 		changed = false
-		adds := reSubMatchMap(reAdd, expr)
+		adds := reSubMatchMap(reg, expr)
 		if len(adds) > 0 {
-			loc := reAdd.FindStringIndex(expr)
+			loc := reg.FindStringIndex(expr)
+			if t == "mul" {
+				// We need to prevent this operating on expressions that contain + and * at the
+				// same level
+			}
 			a, _ := strconv.ParseInt(adds["a"], 10, 64)
 			b, _ := strconv.ParseInt(adds["b"], 10, 64)
-			expr = expr[:loc[0]] + strconv.Itoa(int(a+b)) + expr[loc[1]:]
+			expr = expr[:loc[0]] + strconv.Itoa(int(op(a, b))) + expr[loc[1]:]
 			changed = true
 		}
-		log.Print(expr)
 		b := reSubMatchMap(reNoOp, expr)
 		if len(b) > 0 {
-			log.Print("Sad: ", b)
-			// We have things like (55)loc := reAdd.FindStringIndex(expr)
+			// We have things like (55)
 			loc := reNoOp.FindStringIndex(expr)
 			a, _ := strconv.ParseInt(b["exp"], 10, 64)
 			expr = expr[:loc[0]] + strconv.Itoa(int(a)) + expr[loc[1]:]
@@ -173,34 +203,56 @@ func evalRegexPlus(expr string) (result string) {
 	return expr
 }
 
-func evalRegexMul(expr string) (result string) {
-	return evalRegex(expr, reMul)
+func findEndOfSubExpression(expr string, start int64) (end int64) {
+	var depth int64 = 0
+	for j := int64(start); j < int64(len(expr)); j++ {
+		if expr[j] == '(' {
+			depth++
+		} else if expr[j] == ')' {
+			depth--
+		}
+		if depth == 0 {
+			return j
+		}
+	}
+	return start
 }
 
-func evalRegex(expr string, reg *regexp.Regexp) (result string) {
-	log.Print(expr)
-	var changed bool = true
-	for changed {
-		changed = false
-		adds := reSubMatchMap(reg, expr)
-		if len(adds) > 0 {
-			loc := reg.FindStringIndex(expr)
-			a, _ := strconv.ParseInt(adds["a"], 10, 64)
-			b, _ := strconv.ParseInt(adds["b"], 10, 64)
-			expr = expr[:loc[0]] + strconv.Itoa(int(a+b)) + expr[loc[1]:]
-			changed = true
+func findStartOfSubExpression(expr string, end int64) (start int64) {
+	var depth int64 = 0
+	for j := int64(end); j >= 0; j-- {
+		if expr[j] == ')' {
+			depth++
+		} else if expr[j] == '(' {
+			depth--
 		}
-		log.Print(expr)
-		b := reSubMatchMap(reNoOp, expr)
-		if len(b) > 0 {
-			log.Print("Sad: ", b)
-			// We have things like (55)
-			loc := reNoOp.FindStringIndex(expr)
-			a, _ := strconv.ParseInt(b["exp"], 10, 64)
-			expr = expr[:loc[0]] + strconv.Itoa(int(a)) + expr[loc[1]:]
-			changed = true
+		if depth == 0 {
+			return j
 		}
-		log.Print(expr)
+	}
+	return end
+}
+
+func addBracketsToPlus(expr string) (result string) {
+	// findEndOfSubExpression(expr, start)
+	// for i, c := range expr {
+	for i := 0; i < len(expr); i++ {
+		c := rune(expr[i])
+		if c == '+' {
+			start := findStartOfSubExpression(expr, int64(i-2))
+			end := findEndOfSubExpression(expr, int64(i+2)) + 1
+			// log.Print("Wrapping \"", expr[start:end], "\" in brackets")
+			expr = expr[:start] + "(" + expr[start:end] + ")" + expr[end:]
+			i += 2
+			// fmt.Println(expr)
+			// for k := 0; k < i; k++ {
+			// 	fmt.Print(" ")
+			// }
+			// fmt.Println("^")
+			// log.Print("i: ", i, " expr[i]: ", string(expr[i]))
+			// log.Print(result)
+
+		}
 	}
 	return expr
 }
@@ -224,22 +276,48 @@ func fileToSlice(filename string) []string {
 
 func load() {
 	// log.Print(-21 % 5)
-	// fileContents := fileToSlice("input")
-	// var total int64
 	// for _, line := range fileContents {
+	// 	for {
+	// 		var changedPlus, changedMul bool
+	// 		line, changedPlus = evalRegexPlus(line)
+	// 		line, changedMul = evalRegexMul(line)
+	// 		// if line == "46" {
+	// 		// 	break
+	// 		// }
+	// 		if !changedPlus && !changedMul {
+	// 			break
+	// 			// log.Print()
+	// 		}
+	// 	}
+	// 	log.Print(line)
+	// }
+	// test := "1 + 2 + 3"
+	// test = addBracketsToPlus(test)
+	// log.Print(test)
+
+	// log.Print(findEndOfSubExpression(test, 0))
 
 	// log.Print(evalPlus(line))
 	// log.Print("---------")
-	// a := eval(line)
-	// log.Print(a)
-	// total += a
 
-	// }
+	fileContents := fileToSlice("input")
+	var total int64
+	for _, line := range fileContents {
+		// log.Print(line)
+		line = addBracketsToPlus(line)
+		a := eval(line)
+		// log.Print(line)
+		// log.Print(a)
+		total += a
+	}
+	log.Print(total)
+
 	// test := "2 + (3 * 3 + 4) + 5 * 2"
-	test := "2 + 2 + 3 * (3 + 55 * (2 * 3))"
-	log.Print(test)
-	test = evalRegexPlus(test)
-	log.Print(test)
+	// test := "2 + 2 + 3 * (3 + 55 * (2 * 3))"
+	// log.Print(test)
+	// test = evalRegexPlus(test)
+	// test = evalRegexMul(test)
+	// log.Print(test)
 	// log.Print(reSubMatchMap(reMaths, test))
 	// log.Print(reSubMatchMap(reMaths, test))
 	// log.Print(reSubMatchMap(reSubExpr, test))
