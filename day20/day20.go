@@ -9,6 +9,8 @@ import (
 )
 
 const imageSize = 3
+
+// const imageSize = 12
 const tileCount = imageSize * imageSize
 const tileSize = 10
 const (
@@ -17,6 +19,8 @@ const (
 	left  = iota // 2
 	right = iota // 3
 )
+
+type dir int
 
 type border [4 * tileSize]bool
 
@@ -42,19 +46,19 @@ func shift(a border, v int64, flip bool) (result border) {
 	return temp
 }
 
-func checkTenOverlapBorder(a, b border) (result bool) {
+func checkTenOverlapBorder(a, b border) (result dir) {
 	var count int
 	for i := 0; i < 4*tileSize; i++ {
 		if a[i] == b[i] {
 			count++
-			if count >= 10 {
-				return true
+			if count >= 10 && (i%10 == 0) {
+				return dir((i / 10))
 			}
 		} else {
 			count = 0
 		}
 	}
-	return false
+	return -1
 }
 
 type image struct {
@@ -111,14 +115,16 @@ func (t *tile) checkSharedEdge(t2 tile) int64 {
 	// Look for an overlapping 10 values in the border of each.
 	for i := int64(0); i < tileSize*4; i += tileSize {
 		temp := shift(t2.b, i, false)
-		if checkTenOverlapBorder(t.b, temp) {
-			log.Print(t2.id, " shares a border with ", t.id)
+		d := checkTenOverlapBorder(t.b, temp)
+		if d >= 0 {
+			log.Print(t2.id, " shares a border with ", t.id, " d: ", d)
 		}
 	}
 	for i := int64(0); i < tileSize*4; i += tileSize {
 		temp := shift(t2.b, i, true)
-		if checkTenOverlapBorder(t.b, temp) {
-			log.Print(t2.id, " flipped shares a border with ", t.id)
+		d := checkTenOverlapBorder(t.b, temp)
+		if d >= 0 {
+			log.Print(t2.id, " flipped shares a border with ", t.id, " d: ", d)
 		}
 	}
 	return -1
