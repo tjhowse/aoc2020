@@ -20,8 +20,9 @@ const (
 
 type border [4 * tileSize]bool
 
-func shift(a border, v int64) (result border) {
+func shift(a border, v int64, flip bool) (result border) {
 	// This returns array a shifted right by v count, wrapped etc
+	// if flip is true, flip the final result
 	k := 0
 	for i := v; ; i++ {
 		i %= 4 * tileSize
@@ -31,7 +32,14 @@ func shift(a border, v int64) (result border) {
 			break
 		}
 	}
-	return result
+	if !flip {
+		return result
+	}
+	temp := border{}
+	for i := 0; i < 4*tileSize; i++ {
+		temp[i] = result[4*tileSize-1-i]
+	}
+	return temp
 }
 
 func checkTenOverlapBorder(a, b border) (result bool) {
@@ -102,10 +110,15 @@ func (t *tile) checkSharedEdge(t2 tile) int64 {
 
 	// Look for an overlapping 10 values in the border of each.
 	for i := int64(0); i < tileSize*4; i += tileSize {
-		temp := shift(t2.b, i)
+		temp := shift(t2.b, i, false)
 		if checkTenOverlapBorder(t.b, temp) {
 			log.Print(t2.id, " shares a border with ", t.id)
-			return 1
+		}
+	}
+	for i := int64(0); i < tileSize*4; i += tileSize {
+		temp := shift(t2.b, i, true)
+		if checkTenOverlapBorder(t.b, temp) {
+			log.Print(t2.id, " flipped shares a border with ", t.id)
 		}
 	}
 	return -1
