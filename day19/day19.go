@@ -59,11 +59,21 @@ func validate(s []int64, rules map[rulePattern]int64, ruleZero []int64) bool {
 			if validate(new, rules, ruleZero) {
 				return true
 			}
+			// if !sliceEqual(s[:i], ruleZero[:i]) {
+			// 	return false
+			// }
 		}
 		// break
 	}
 
 	return false
+}
+
+func validate2(s []int64, rules map[rulePattern]int64, ruleZero []int64) bool {
+	// for _, c := range ruleZero {
+
+	// }
+	return true
 }
 
 type rulePattern [2]int64
